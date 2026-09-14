@@ -1,34 +1,46 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-const EVENT_DATE = new Date("2026-12-12T21:00:00-03:00");
+const EVENT_TIMESTAMP = Date.UTC(2026, 11, 13, 0, 0, 0);
+
+type Countdown = {
+  dias: number;
+  horas: number;
+  minutos: number;
+  segundos: number;
+};
+
+function calculateCountdown(): Countdown {
+  const difference = Math.max(0, EVENT_TIMESTAMP - Date.now());
+  return {
+    dias: Math.floor(difference / 86_400_000),
+    horas: Math.floor((difference / 3_600_000) % 24),
+    minutos: Math.floor((difference / 60_000) % 60),
+    segundos: Math.floor((difference / 1_000) % 60),
+  };
+}
 
 function useCountdown() {
-  const calculate = () => {
-    const difference = Math.max(0, EVENT_DATE.getTime() - Date.now());
-    return {
-      dias: Math.floor(difference / 86_400_000),
-      horas: Math.floor((difference / 3_600_000) % 24),
-      minutos: Math.floor((difference / 60_000) % 60),
-      segundos: Math.floor((difference / 1_000) % 60),
-    };
-  };
-  const [time, setTime] = useState(calculate);
+  const [time, setTime] = useState<Countdown | null>(null);
   useEffect(() => {
-    const interval = window.setInterval(() => setTime(calculate()), 1000);
+    const tick = () => setTime(calculateCountdown());
+    tick();
+    const interval = window.setInterval(tick, 1000);
     return () => window.clearInterval(interval);
   }, []);
   return time;
 }
 
-function Pad({ value }: { value: number }) {
-  return <>{String(value).padStart(2, "0")}</>;
+function Pad({ value }: { value: number | undefined }) {
+  return <>{value === undefined ? "--" : String(value).padStart(2, "0")}</>;
 }
 
 export default function Home() {
   const countdown = useCountdown();
-  const [panel, setPanel] = useState<"music" | "trivia" | "keep" | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [panel, setPanel] = useState<"gift" | "trivia" | "keep" | null>(null);
+  const [audioPlaying, setAudioPlaying] = useState(false);
   const [toast, setToast] = useState("");
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState<number | null>(null);
@@ -49,16 +61,6 @@ export default function Home() {
     window.setTimeout(() => setToast(""), 3200);
   }
 
-  function submitSong(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const song = String(data.get("song") || "").trim();
-    if (!song) return;
-    localStorage.setItem("alma-song", song);
-    setPanel(null);
-    notify(`¡Anotada! “${song}” se suma a la playlist.`);
-  }
-
   function submitMemory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -74,36 +76,87 @@ export default function Home() {
     setScore(answer === "b" ? 1 : 0);
   }
 
+  async function copyAlias() {
+    const alias = "alma.menghi";
+    try {
+      await navigator.clipboard.writeText(alias);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = alias;
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+    notify("Alias copiado: alma.menghi");
+  }
+
+  async function toggleAudio() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      try {
+        await audio.play();
+      } catch {
+        notify("Tocá nuevamente para reproducir la música");
+      }
+    } else {
+      audio.pause();
+    }
+  }
+
   return (
     <main>
-      <nav className="floating-nav" aria-label="Navegación de la invitación">
-        <a href="#inicio" aria-label="Ir al inicio">A</a>
-        <div className="nav-dots" aria-hidden="true"><i /><i /><i /></div>
-        <a href="#confirmar">RSVP</a>
-      </nav>
-
+      <audio ref={audioRef} src="/alma/primadonna.mp3" loop preload="metadata" onPlay={() => setAudioPlaying(true)} onPause={() => setAudioPlaying(false)} />
+      <button className={`audio-toggle${audioPlaying ? " is-playing" : ""}`} onClick={toggleAudio} aria-label={audioPlaying ? "Apagar música" : "Encender música"} aria-pressed={audioPlaying}>
+        {audioPlaying ? (
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path className="sound-wave" d="M17 9.2c.8.8 1.2 1.7 1.2 2.8s-.4 2-1.2 2.8M19.5 6.8c1.5 1.4 2.3 3.1 2.3 5.2s-.8 3.8-2.3 5.2"/></svg>
+        ) : (
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path className="sound-wave" d="m17 9 5 6M22 9l-5 6"/></svg>
+        )}
+      </button>
       <section id="inicio" className="hero panel-image">
         <picture>
           <source media="(min-width: 840px)" srcSet="/alma/portada-horizontal.png" />
           <img src="/alma/portada.png" alt="Mis XV de Alma, una composición rosa con perlas y cintas" />
         </picture>
-        <a className="scroll-cue" href="#cuenta"><span>DESCUBRÍ LA INVITACIÓN</span><b>↓</b></a>
       </section>
 
-      <section id="cuenta" className="countdown-section">
-        <div className="pearl-strand" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
-        <p className="eyebrow">FALTA MUY POCO</p>
-        <div className="countdown-grid" aria-label="Cuenta regresiva para el 12 de diciembre de 2026">
-          <div className="days"><strong><Pad value={countdown.dias} /></strong><span>DÍAS</span></div>
-          <div><strong><Pad value={countdown.horas} /></strong><span>HORAS</span></div>
-          <div><strong><Pad value={countdown.minutos} /></strong><span>MINUTOS</span></div>
-          <div><strong><Pad value={countdown.segundos} /></strong><span>SEGUNDOS</span></div>
+      <div className="hero-countdown-seam" aria-hidden="true">
+        <svg viewBox="0 0 943 180" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="seamColor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#edc7c3" stopOpacity="0" />
+              <stop offset=".34" stopColor="#edc7c3" stopOpacity=".34" />
+              <stop offset=".5" stopColor="#edc7c3" stopOpacity=".72" />
+              <stop offset=".66" stopColor="#edc7c3" stopOpacity=".34" />
+              <stop offset="1" stopColor="#edc7c3" stopOpacity="0" />
+            </linearGradient>
+            <mask id="decorationsCutout">
+              <rect width="943" height="180" fill="white" />
+              <path d="M610 -25C605 38 585 91 552 120C515 153 466 177 402 205" fill="none" stroke="black" strokeWidth="170" strokeLinecap="round" />
+              <path d="M38 -15C52 44 62 104 76 198" fill="none" stroke="black" strokeWidth="155" strokeLinecap="round" />
+            </mask>
+          </defs>
+          <rect width="943" height="180" fill="url(#seamColor)" mask="url(#decorationsCutout)" />
+        </svg>
+      </div>
+
+      <section id="cuenta" className="panel-image countdown-panel" aria-label="Cuenta regresiva para el 12 de diciembre de 2026">
+        <img src="/alma/countdown-seam-v2.png" alt="Falta muy poco: cuenta regresiva para los XV de Alma" />
+        <div className="countdown-sparkles" aria-hidden="true">
+          {Array.from({ length: 14 }, (_, index) => <i key={index} className={`sparkle count-sparkle-${index + 1}`} />)}
         </div>
-        <p className="tiny-note">PARA UNA NOCHE INOLVIDABLE</p>
+        <div className="countdown-number countdown-days"><Pad value={countdown?.dias} /></div>
+        <div className="countdown-number countdown-hours"><Pad value={countdown?.horas} /></div>
+        <div className="countdown-number countdown-minutes"><Pad value={countdown?.minutos} /></div>
+        <div className="countdown-number countdown-seconds"><Pad value={countdown?.segundos} /></div>
       </section>
 
       <section id="fecha" className="panel-image interactive-panel">
-        <img src="/alma/fecha.png" alt="12 de diciembre, de 21:00 a 06:00 horas" />
+        <img src="/alma/fecha-seam.png" alt="12 de diciembre, de 21:00 a 06:00 horas" />
         <a className="hotspot calendar" href={calendarUrl} target="_blank" rel="noreferrer" aria-label="Agregar los XV de Alma a Google Calendar" />
       </section>
 
@@ -112,44 +165,66 @@ export default function Home() {
         <a className="hotspot map" href="https://www.google.com/maps/search/?api=1&query=Sal%C3%B3n+El+Carmen+Raquel+Espa%C3%B1ol+325+Wilde" target="_blank" rel="noreferrer" aria-label="Ver ubicación del Salón El Carmen en Google Maps" />
       </section>
 
-      <section id="dress-code" className="dress-section">
-        <div className="ribbon ribbon-one" aria-hidden="true" />
-        <div className="ribbon ribbon-two" aria-hidden="true" />
-        <p className="eyebrow">DRESS CODE</p>
-        <h2>Elegante</h2>
-        <div className="dress-illustration" aria-hidden="true"><span>✦</span></div>
-        <p>La noche pide brillos,<br />tonos suaves y tu mejor look.</p>
-        <div className="dress-note"><i />El rosa queda reservado para Alma<i /></div>
+      <section id="dress-code" className="panel-image">
+        <img src="/alma/dress-code-brillo.png" alt="Dress code elegante. Se reservan los colores claros" />
+        <div className="dress-sparkles" aria-hidden="true">
+          {Array.from({ length: 16 }, (_, index) => <i key={index} className={`sparkle dress-sparkle-${index + 1}`} />)}
+        </div>
+      </section>
+
+      <section id="regalos" className="panel-image interactive-panel">
+        <img src="/alma/regalos.png" alt="Regalos: tu presencia es mi mejor regalo" />
+        <div className="section-wave section-wave--top" aria-hidden="true">
+          <svg viewBox="0 0 943 180" preserveAspectRatio="none"><path d="M0 0H943V72C710 182 300 8 0 126Z" /></svg>
+        </div>
+        <div className="section-wave section-wave--bottom" aria-hidden="true">
+          <svg viewBox="0 0 943 180" preserveAspectRatio="none"><path d="M0 122C245 5 690 178 943 68V180H0Z" /></svg>
+        </div>
+        <button className="hotspot gift" onClick={() => setPanel("gift")} aria-label="Ver datos para hacer un regalo" />
       </section>
 
       <section id="musica" className="panel-image interactive-panel">
-        <img src="/alma/musica.png" alt="Música: qué canción no puede faltar" />
-        <button className="hotspot music" onClick={() => setPanel("music")} aria-label="Sumar una canción a la playlist" />
+        <img src="/alma/musica-brillo.png" alt="Música: qué canción no puede faltar" />
+        <div className="headphone-sparkles" aria-hidden="true">
+          {Array.from({ length: 12 }, (_, index) => <i key={index} className={`sparkle sparkle-${index + 1}`} />)}
+        </div>
+        <a className="hotspot music" href="https://open.spotify.com/playlist/3NfM07qjhuHBChL3cYp8JE?si=dSZMrnlGRJaZaqhSeo5dyw&utm_source=whatsapp&pi=Qo-q4YZBSFubK&pt=da783e5b26487d01385bf68d7289ef00" target="_blank" rel="noreferrer" aria-label="Sumar una canción a la playlist de Alma en Spotify" />
       </section>
 
       <section id="bloomkeep" className="panel-image interactive-panel">
-        <img src="/alma/bloomkeep.png" alt="BloomKeep: compartí tus fotos y mensajes en tiempo real" />
+        <img src="/alma/bloomkeep-cable.png" alt="BloomKeep: compartí tus fotos y mensajes en tiempo real" />
         <button className="hotspot keep" onClick={() => setPanel("keep")} aria-label="Ingresar a BloomKeep" />
       </section>
 
       <section id="trivias" className="panel-image interactive-panel">
-        <img src="/alma/trivias.png" alt="BloomTrivias: respondé, votá y subí al ranking" />
+        <img src="/alma/trivias-no-wire.png" alt="BloomTrivias: respondé, votá y subí al ranking" />
         <button className="hotspot trivia" onClick={() => { setPanel("trivia"); setScore(null); setAnswer(""); }} aria-label="Empezar a jugar BloomTrivias" />
       </section>
 
       <section id="confirmar" className="panel-image interactive-panel closing">
-        <img src="/alma/cierre.png" alt="Alma te invita a celebrar sus quince años" />
-        <a className="hotspot rsvp" href="https://wa.me/?text=Hola%2C%20confirmo%20mi%20asistencia%20a%20los%20XV%20de%20Alma%20%E2%99%A1" target="_blank" rel="noreferrer" aria-label="Confirmar asistencia por WhatsApp" />
-        <footer><span>HECHO CON ♡ POR</span><strong>BloomDate</strong></footer>
+        <img src="/alma/cierre-sin-fecha.png" alt="Alma te invita a celebrar sus quince años" />
+        <a className="hotspot rsvp" href="https://bloomdate-rsvp.netlify.app/r/cumple-xv-almaa" target="_blank" rel="noreferrer" aria-label="Confirmar asistencia a los XV de Alma" />
       </section>
+
+      <footer className="bloomdate-footer panel-image interactive-panel">
+        <img src="/alma/footer-sin-cinta.png" alt="Hecho con amor por BloomDate" />
+        <a className="footer-link footer-instagram" href="https://www.instagram.com/bloomdate.invitaciones/" target="_blank" rel="noreferrer" aria-label="Instagram de BloomDate" />
+        <a className="footer-link footer-whatsapp" href="https://wa.me/5491140436324" target="_blank" rel="noreferrer" aria-label="WhatsApp de BloomDate" />
+        <a className="footer-link footer-web" href="https://bloomdate-site.netlify.app/" target="_blank" rel="noreferrer" aria-label="Sitio web de BloomDate" />
+      </footer>
 
       {panel && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setPanel(null)}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onMouseDown={(e) => e.stopPropagation()}>
             <button className="close" onClick={() => setPanel(null)} aria-label="Cerrar">×</button>
-            {panel === "music" && <>
-              <p className="modal-kicker">PLAYLIST DE ALMA</p><h2 id="modal-title">¿Qué canción no puede faltar?</h2>
-              <form onSubmit={submitSong}><label>Tema o artista<input name="song" placeholder="Ej. Golden — Harry Styles" autoFocus /></label><button type="submit">SUMAR A LA LISTA</button></form>
+            {panel === "gift" && <>
+              <p className="modal-kicker">REGALOS</p><h2 id="modal-title">Datos para hacer un presente</h2>
+              <dl className="gift-data">
+                <div><dt>ALIAS</dt><dd>alma.menghi</dd></div>
+                <div><dt>TITULAR</dt><dd>Alma Isabella Menghi</dd></div>
+                <div><dt>ENTIDAD</dt><dd>Mercado Pago</dd></div>
+              </dl>
+              <button className="primary copy-alias" onClick={copyAlias}>COPIAR ALIAS</button>
             </>}
             {panel === "keep" && <>
               <p className="modal-kicker">BLOOMKEEP</p><h2 id="modal-title">Dejale algo lindo a Alma</h2>

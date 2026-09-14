@@ -39,7 +39,7 @@ function Pad({ value }: { value: number | undefined }) {
 export default function Home() {
   const countdown = useCountdown();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [panel, setPanel] = useState<"gift" | "trivia" | "keep" | null>(null);
+  const [panel, setPanel] = useState<"location" | "gift" | "trivia" | "keep" | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [toast, setToast] = useState("");
   const [answer, setAnswer] = useState("");
@@ -91,6 +91,23 @@ export default function Home() {
       input.remove();
     }
     notify("Alias copiado: alma.menghi");
+  }
+
+  async function copyAddress() {
+    const address = "Salón El Carmen, Raquel Español 325, Wilde";
+    try {
+      await navigator.clipboard.writeText(address);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = address;
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+    notify("Dirección copiada");
   }
 
   async function toggleAudio() {
@@ -162,7 +179,7 @@ export default function Home() {
 
       <section id="ubicacion" className="panel-image interactive-panel">
         <img src="/alma/ubicacion.png" alt="Cómo llegar al Salón El Carmen, Raquel Español 325, Wilde" />
-        <a className="hotspot map" href="https://www.google.com/maps/search/?api=1&query=Sal%C3%B3n+El+Carmen+Raquel+Espa%C3%B1ol+325+Wilde" target="_blank" rel="noreferrer" aria-label="Ver ubicación del Salón El Carmen en Google Maps" />
+        <button className="hotspot map" onClick={() => setPanel("location")} aria-label="Ver cómo llegar al Salón El Carmen" />
       </section>
 
       <section id="dress-code" className="panel-image">
@@ -217,6 +234,19 @@ export default function Home() {
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setPanel(null)}>
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onMouseDown={(e) => e.stopPropagation()}>
             <button className="close" onClick={() => setPanel(null)} aria-label="Cerrar">×</button>
+            {panel === "location" && <>
+              <p className="modal-kicker">CÓMO LLEGAR</p><h2 id="modal-title">Salón El Carmen</h2>
+              <div className="location-card">
+                <span>DIRECCIÓN</span>
+                <strong>Raquel Español 325</strong>
+                <small>Wilde, Buenos Aires</small>
+              </div>
+              <div className="modal-actions">
+                <a className="primary map-choice" href="https://www.google.com/maps/search/?api=1&query=Sal%C3%B3n+El+Carmen%2C+Raquel+Espa%C3%B1ol+325%2C+Wilde" target="_blank" rel="noreferrer">ABRIR GOOGLE MAPS</a>
+                <a className="primary map-choice map-choice--outline" href="https://www.waze.com/ul?q=Sal%C3%B3n%20El%20Carmen%2C%20Raquel%20Espa%C3%B1ol%20325%2C%20Wilde&navigate=yes" target="_blank" rel="noreferrer">ABRIR WAZE</a>
+                <button className="copy-address" onClick={copyAddress}>COPIAR DIRECCIÓN</button>
+              </div>
+            </>}
             {panel === "gift" && <>
               <p className="modal-kicker">REGALOS</p><h2 id="modal-title">Datos para hacer un presente</h2>
               <dl className="gift-data">

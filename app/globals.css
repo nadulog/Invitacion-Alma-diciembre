@@ -160,6 +160,14 @@ main { width:min(100%, 943px); margin:auto; overflow:hidden; background:var(--pa
 .gift-data dd { margin:0; color:#4f4748; font:500 22px/1.1 'Cormorant Garamond',serif; }
 .copy-alias { margin-top:2px; }
 .modal form button,.primary { width:100%; padding:15px; border:1px solid #b96c73; border-radius:40px; color:white; background:#b96c73; letter-spacing:.18em; font-size:11px; cursor:pointer; }
+.location-card { display:grid; gap:5px; margin:0 0 20px; padding:18px; border:1px solid rgba(185,108,115,.3); border-radius:16px; background:rgba(255,255,255,.5); text-align:center; }
+.location-card span { color:#a66a70; font-size:9px; font-weight:600; letter-spacing:.2em; }
+.location-card strong { color:#4f4748; font:500 25px/1.1 'Cormorant Garamond',serif; }
+.location-card small { color:#776a6c; font-size:11px; }
+.modal-actions { display:grid; gap:10px; }
+.map-choice { display:flex; align-items:center; justify-content:center; min-height:48px; text-decoration:none; }
+.map-choice--outline { color:#a75f68; background:rgba(255,255,255,.55); }
+.copy-address { padding:10px; border:0; color:#8d5c62; background:transparent; font-size:10px; font-weight:600; letter-spacing:.15em; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
 .answers { display:grid; gap:10px; margin-bottom:18px; }.answers button { display:flex; align-items:center; gap:14px; padding:11px; border:1px solid transparent; border-radius:14px; color:#55494a; background:rgba(255,255,255,.58); text-align:left; cursor:pointer; }.answers button.selected { border-color:#c77b82; background:#fff5f1; }.answers b { display:grid; place-items:center; width:35px; height:35px; border-radius:50%; background:#efd2ce; }
 .result { padding:14px; border-radius:14px; background:#ead1ce; text-align:center; font-family:'Cormorant Garamond',serif; font-size:20px; }.result.correct { background:#e5ddd0; color:#6e634c; }
 .toast { position:fixed; z-index:70; bottom:25px; left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 30px); padding:14px 20px; border-radius:30px; color:white; background:#7e5055; box-shadow:0 10px 35px rgba(61,35,38,.28); font-size:12px; text-align:center; }

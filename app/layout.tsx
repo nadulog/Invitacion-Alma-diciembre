@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: "/" },
   icons: { icon: "/favicon.svg" },
-  openGraph: { title, description, url: "/", siteName: "Mis XV de Alma", type: "website", locale: "es_AR", images: [{ url: "/alma/whatsapp-preview.png", width: 1733, height: 908, alt: "Mis XV de Alma — 12 de diciembre" }] },
-  twitter: { card: "summary_large_image", title, description, images: ["/alma/whatsapp-preview.png"] },
+  openGraph: { title, description, url: "/", siteName: "Mis XV de Alma", type: "website", locale: "es_AR", images: [{ url: "/alma/whatsapp-preview-v3.jpg", width: 1200, height: 630, type: "image/jpeg", alt: "Mis XV de Alma — 12 de diciembre" }] },
+  twitter: { card: "summary_large_image", title, description, images: ["/alma/whatsapp-preview-v3.jpg"] },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

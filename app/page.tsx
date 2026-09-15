@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const EVENT_TIMESTAMP = Date.UTC(2026, 11, 13, 0, 0, 0);
 
@@ -39,7 +39,7 @@ function Pad({ value }: { value: number | undefined }) {
 export default function Home() {
   const countdown = useCountdown();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [panel, setPanel] = useState<"location" | "gift" | "trivia" | "keep" | null>(null);
+  const [panel, setPanel] = useState<"location" | "gift" | "trivia" | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [toast, setToast] = useState("");
   const [answer, setAnswer] = useState("");
@@ -59,16 +59,6 @@ export default function Home() {
   function notify(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 3200);
-  }
-
-  function submitMemory(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const memory = String(data.get("memory") || "").trim();
-    if (!memory) return;
-    localStorage.setItem("alma-memory", memory);
-    setPanel(null);
-    notify("Tu mensaje quedó guardado para Alma ♡");
   }
 
   function checkTrivia() {
@@ -210,7 +200,7 @@ export default function Home() {
 
       <section id="bloomkeep" className="panel-image interactive-panel">
         <img src="/alma/bloomkeep-cable.png" alt="BloomKeep: compartí tus fotos y mensajes en tiempo real" />
-        <button className="hotspot keep" onClick={() => setPanel("keep")} aria-label="Ingresar a BloomKeep" />
+        <a className="hotspot keep" href="https://app.bloomkeep.site/alma-d" target="_blank" rel="noreferrer" aria-label="Ingresar al BloomKeep de Alma" />
       </section>
 
       <section id="trivias" className="panel-image interactive-panel">
@@ -255,10 +245,6 @@ export default function Home() {
                 <div><dt>ENTIDAD</dt><dd>Mercado Pago</dd></div>
               </dl>
               <button className="primary copy-alias" onClick={copyAlias}>COPIAR ALIAS</button>
-            </>}
-            {panel === "keep" && <>
-              <p className="modal-kicker">BLOOMKEEP</p><h2 id="modal-title">Dejale algo lindo a Alma</h2>
-              <form onSubmit={submitMemory}><label>Tu mensaje<textarea name="memory" placeholder="Un deseo, un recuerdo, unas palabras…" autoFocus /></label><button type="submit">GUARDAR MENSAJE</button></form>
             </>}
             {panel === "trivia" && <>
               <p className="modal-kicker">BLOOMTRIVIAS · 01/03</p><h2 id="modal-title">¿Cuál es el mes favorito de Alma?</h2>

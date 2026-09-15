@@ -39,11 +39,9 @@ function Pad({ value }: { value: number | undefined }) {
 export default function Home() {
   const countdown = useCountdown();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [panel, setPanel] = useState<"location" | "gift" | "trivia" | null>(null);
+  const [panel, setPanel] = useState<"location" | "gift" | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [toast, setToast] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [score, setScore] = useState<number | null>(null);
 
   const calendarUrl = useMemo(() => {
     const query = new URLSearchParams({
@@ -59,11 +57,6 @@ export default function Home() {
   function notify(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 3200);
-  }
-
-  function checkTrivia() {
-    if (!answer) return;
-    setScore(answer === "b" ? 1 : 0);
   }
 
   async function copyAlias() {
@@ -203,9 +196,8 @@ export default function Home() {
         <a className="hotspot keep" href="https://app.bloomkeep.site/alma-d" target="_blank" rel="noreferrer" aria-label="Ingresar al BloomKeep de Alma" />
       </section>
 
-      <section id="trivias" className="panel-image interactive-panel">
+      <section id="trivias" className="panel-image">
         <img src="/alma/trivias-no-wire.png" alt="BloomTrivias: respondé, votá y subí al ranking" />
-        <button className="hotspot trivia" onClick={() => { setPanel("trivia"); setScore(null); setAnswer(""); }} aria-label="Empezar a jugar BloomTrivias" />
       </section>
 
       <section id="confirmar" className="panel-image interactive-panel closing">
@@ -245,13 +237,6 @@ export default function Home() {
                 <div><dt>ENTIDAD</dt><dd>Mercado Pago</dd></div>
               </dl>
               <button className="primary copy-alias" onClick={copyAlias}>COPIAR ALIAS</button>
-            </>}
-            {panel === "trivia" && <>
-              <p className="modal-kicker">BLOOMTRIVIAS · 01/03</p><h2 id="modal-title">¿Cuál es el mes favorito de Alma?</h2>
-              <div className="answers">
-                {[['a','Enero'],['b','Diciembre'],['c','Julio']].map(([value,label]) => <button key={value} className={answer === value ? "selected" : ""} onClick={() => setAnswer(value)}><b>{value.toUpperCase()}</b>{label}</button>)}
-              </div>
-              {score === null ? <button className="primary" onClick={checkTrivia}>RESPONDER</button> : <p className={`result ${score ? "correct" : ""}`}>{score ? "¡Correcto! Conocés muy bien a Alma ✦" : "Casi… la respuesta era diciembre ♡"}</p>}
             </>}
           </div>
         </div>

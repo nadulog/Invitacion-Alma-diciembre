@@ -196,8 +196,9 @@ export default function Home() {
         <a className="hotspot keep" href="https://app.bloomkeep.site/alma-d" target="_blank" rel="noreferrer" aria-label="Ingresar al BloomKeep de Alma" />
       </section>
 
-      <section id="trivias" className="panel-image">
+      <section id="trivias" className="panel-image interactive-panel">
         <img src="/alma/trivias-no-wire.png" alt="BloomTrivias: respondé, votá y subí al ranking" />
+        <a className="hotspot trivia" href="https://trivias-bloomdate.netlify.app/evento/6ab1bb77003758857a57" target="_blank" rel="noreferrer" aria-label="Empezar a jugar BloomTrivias" />
       </section>
 
       <section id="confirmar" className="panel-image interactive-panel closing">
